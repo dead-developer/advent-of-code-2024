@@ -15,8 +15,8 @@ Trying to learn Go with 2024 Advent Of Code
  Day | Part 1  | Part 2  
 :----|:--------|:--------
  1   | &check; | &check; 
- 2   |         |
- 3   |         |
+ 2   | &check; | &check; 
+ 3   | &check; | &check; 
  4   |         |
  5   |         |
  6   |         |
