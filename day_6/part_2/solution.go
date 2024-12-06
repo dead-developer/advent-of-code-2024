@@ -14,6 +14,12 @@ var direction = "up"
 var loops []string
 var visitedCount [][]int
 
+var initialDirection string
+var initialGuardX, initialGuardY int
+
+// how many times cell can be visited before it is considered a loop.
+var loopDetectionThreshold = 4
+
 func main() {
 	total := solution()
 	fmt.Println("solution:", total)
@@ -21,11 +27,9 @@ func main() {
 
 func solution() int {
 	loadData()
-	initVisitedCounts()
 	for y := 0; y < len(matrix); y++ {
 		for x := 0; x < len(matrix[0]); x++ {
-			loadData()
-
+			initVisited()
 			testRoute(x, y)
 		}
 	}
@@ -34,20 +38,26 @@ func solution() int {
 
 func testRoute(obstacleX, obstacleY int) {
 
+	// if already obstacle, exit
+	if matrix[obstacleY][obstacleX] == "#" {
+		return
+	}
 	matrix[obstacleY][obstacleX] = "#"
-	loopThreshold := len(matrix) * len(matrix[0])
-	success := true
-	for success {
+
+	success := 1
+	for success == 1 {
 		success = moveGuard()
-		loopThreshold--
-		if loopThreshold == 0 {
+
+		if success == -1 {
 			loops = append(loops, "obstacle: ("+strconv.Itoa(obstacleX)+","+strconv.Itoa(obstacleY)+")")
 			break
 		}
 	}
+	// clear obstacle after used
+	matrix[obstacleY][obstacleX] = "."
 }
 
-func moveGuard() bool {
+func moveGuard() int {
 	// check for obstacles
 
 	canMove := 0
@@ -57,20 +67,25 @@ func moveGuard() bool {
 		newY := guardY + y
 		canMove = canMoveTo(newX, newY)
 		if canMove == -1 {
-			return false
+			return 0
 		}
 		if canMove == 1 {
+			visitedCount[guardY][guardX]++
+
 			guardX = newX
 			guardY = newY
-			//matrix[guardY][guardX] = "X"
-			visitedCount[guardY][guardX]++
-			return true
+			if visitedCount[guardY][guardX] > loopDetectionThreshold {
+				// loop
+				return -1
+			}
+
+			return 1
 		}
 		if canMove == 0 {
 			turn90()
 		}
 	}
-	return true
+	return 1
 }
 
 func canMoveTo(x, y int) int {
@@ -112,13 +127,19 @@ func visualize() {
 	for _, line := range matrix {
 		fmt.Println(line)
 	}
+	fmt.Println()
 }
 
-func initVisitedCounts() {
+func initVisited() {
 	visitedCount = make([][]int, len(matrix))
 	for i := range visitedCount {
 		visitedCount[i] = make([]int, len(matrix[0]))
 	}
+
+	guardX = initialGuardX
+	guardY = initialGuardY
+	direction = initialDirection
+
 }
 
 func loadData() {
@@ -136,13 +157,12 @@ func loadData() {
 	for y, line := range matrix {
 		for x, char := range line {
 			if char == "^" {
-				guardX = x
-				guardY = y
-				direction = "up"
+				initialGuardX = x
+				initialGuardY = y
+				initialDirection = "up"
+				matrix[y][x] = "."
 				break
 			}
 		}
 	}
-
-	matrix[guardY][guardX] = "X"
 }
