@@ -123,13 +123,6 @@ func turn90() {
 	}
 }
 
-func visualize() {
-	for _, line := range matrix {
-		fmt.Println(line)
-	}
-	fmt.Println()
-}
-
 func initVisited() {
 	visitedCount = make([][]int, len(matrix))
 	for i := range visitedCount {
