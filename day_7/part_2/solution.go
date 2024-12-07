@@ -10,8 +10,6 @@ import (
 var testValues []int
 var equations [][]int
 
-var operators = []string{"+", "*", "||"}
-
 func main() {
 	total := solution()
 	fmt.Println("solution:", total)
@@ -21,15 +19,21 @@ func solution() int {
 	loadData()
 
 	total := 0
+	var operators1 = []string{"+", "*"}
+	var operators2 = []string{"+", "*", "||"}
 
 	for i, equation := range equations {
-		total += runTests(equation, testValues[i])
+		result := runTests(equation, testValues[i], operators1)
+		total += result
+		if result == 0 {
+			total += runTests(equation, testValues[i], operators2)
+		}
 	}
 
 	return total
 }
 
-func runTests(equation []int, testValue int) int {
+func runTests(equation []int, testValue int, checkOperators []string) int {
 	if len(equation) == 1 {
 		if equation[0] == testValue {
 			return equation[0]
@@ -37,16 +41,16 @@ func runTests(equation []int, testValue int) int {
 	}
 
 	operatorSlots := len(equation) - 1
-	totalCombinations := intPow(len(operators), operatorSlots)
+	totalCombinations := intPow(len(checkOperators), operatorSlots)
 
 	for i := 0; i < totalCombinations; i++ {
 		ops := make([]string, operatorSlots)
 		temp := i
 
 		// get combinations v2
-		amountOfOperators := len(operators)
+		amountOfOperators := len(checkOperators)
 		for j := 0; j < operatorSlots; j++ {
-			ops[j] = operators[temp%amountOfOperators]
+			ops[j] = checkOperators[temp%amountOfOperators]
 			temp /= amountOfOperators
 		}
 
