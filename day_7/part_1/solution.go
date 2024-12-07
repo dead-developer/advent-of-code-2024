@@ -30,41 +30,51 @@ func solution() int {
 }
 
 func runTests(equation []int, testValue int) int {
-	// run combinations of operators to numbers
-	combinations := generateCombinations(operators, len(equation)-1, []string{})
-
-	// test each combination
-	for _, combination := range combinations {
-		// do the math according to operators
-		result := equation[0]
-		for i, op := range combination {
-			if op == "+" {
-				result += equation[i+1]
-			} else if op == "*" {
-				result *= equation[i+1]
-			}
+	if len(equation) == 1 {
+		if equation[0] == testValue {
+			return equation[0]
 		}
-		if result == testValue {
-			return result
+	}
+
+	operatorSlots := len(equation) - 1
+	totalCombinations := intPow(len(operators), operatorSlots)
+	for i := 0; i < totalCombinations; i++ {
+		ops := make([]string, operatorSlots)
+		temp := i
+
+		// get combinations v2
+		amountOfOperators := len(operators)
+		for j := 0; j < operatorSlots; j++ {
+			ops[j] = operators[temp%amountOfOperators]
+			temp /= amountOfOperators
+		}
+
+		if calculateEquation(equation, ops) == testValue {
+			return testValue
 		}
 	}
 	return 0
 }
 
-func generateCombinations(operators []string, slots int, current []string) [][]string {
-	var result [][]string
-	generateHelper(operators, slots, []string{}, &result)
-	return result
-}
-func generateHelper(operators []string, slots int, current []string, result *[][]string) {
-	if len(current) == slots {
-		*result = append(*result, append([]string(nil), current...))
-		return
+func calculateEquation(equation []int, operators []string) int {
+	result := equation[0]
+	for i := 0; i < len(operators); i++ {
+		if operators[i] == "+" {
+			result += equation[i+1]
+		} else if operators[i] == "*" {
+			result *= equation[i+1]
+		}
 	}
 
-	for _, op := range operators {
-		generateHelper(operators, slots, append(current, op), result)
+	return result
+}
+
+func intPow(base, exponent int) int {
+	result := 1
+	for i := 0; i < exponent; i++ {
+		result *= base
 	}
+	return result
 }
 
 func loadData() {
