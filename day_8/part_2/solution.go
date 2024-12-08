@@ -37,40 +37,36 @@ func solution() int {
 				vector := distanceVector(x1, y1, x2, y2)
 
 				// add to first node
-				var x, y int
 
-				x, y = calcNode(pair[0], vector, false)
-				if isLegalPosition(pairs, x, y) {
-					antiNodesMatrix[y][x] = 1
-				}
+				followVector(x1, y1, vector[0], vector[1])
+				followVector(x1, y1, -vector[0], -vector[1])
+				followVector(x2, y2, vector[0], vector[1])
+				followVector(x2, y2, -vector[0], -vector[1])
 
-				x, y = calcNode(pair[0], vector, true)
-				if isLegalPosition(pairs, x, y) {
-					antiNodesMatrix[y][x] = 1
-				}
-
-				x, y = calcNode(pair[1], vector, false)
-				if isLegalPosition(pairs, x, y) {
-					antiNodesMatrix[y][x] = 1
-				}
-
-				x, y = calcNode(pair[1], vector, true)
-				if isLegalPosition(pairs, x, y) {
-					antiNodesMatrix[y][x] = 1
-				}
 			}
 		}
 	}
+
 	total := countNodes()
 	return total
 }
 
-func calcNode(node antenna, distVector []int, negative bool) (int, int) {
-	if negative {
-		//negative vector
-		return node.x - distVector[0], node.y - distVector[1]
+func followVector(x, y int, vectorX, vectorY int) {
+	var posX, posY int
+	posX, posY = x, y
+
+	for {
+		// add vector
+		posX += vectorX
+		posY += vectorY
+
+		// is outOfMatrix
+		if posX < 0 || posX >= len(matrix[0]) || posY < 0 || posY >= len(matrix) {
+			return
+		}
+
+		antiNodesMatrix[posY][posX] = 1
 	}
-	return node.x + distVector[0], node.y + distVector[1]
 }
 
 func countNodes() int {
@@ -83,20 +79,6 @@ func countNodes() int {
 		}
 	}
 	return count
-}
-
-func isLegalPosition(pairs [][]antenna, x, y int) bool {
-	// ignore if either of pairs
-	for _, pair := range pairs {
-		if pair[0].x == x && pair[0].y == y {
-			return false
-		}
-		if pair[1].x == x && pair[1].y == y {
-			return false
-		}
-	}
-
-	return x >= 0 && x < len(matrix[0]) && y >= 0 && y < len(matrix)
 }
 
 func antennasOfFreq(freq string) []antenna {

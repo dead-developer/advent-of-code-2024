@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const correctAnswer = 0
+const correctAnswer = 1190
 
 func TestSolution(t *testing.T) {
 	framework.RunTest(correctAnswer, solution(), t)
