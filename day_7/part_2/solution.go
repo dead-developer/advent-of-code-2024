@@ -18,16 +18,24 @@ func main() {
 func solution() int {
 	loadData()
 
+	results := make(chan int, len(equations))
+
 	total := 0
 	var operators1 = []string{"+", "*"}
 	var operators2 = []string{"+", "*", "||"}
 
 	for i, equation := range equations {
-		result := runTests(equation, testValues[i], operators1)
-		total += result
-		if result == 0 {
-			total += runTests(equation, testValues[i], operators2)
-		}
+		go func(eq []int, tv int, i int) {
+			result := runTests(eq, tv, operators1)
+			if result == 0 {
+				result += runTests(eq, tv, operators2)
+			}
+			results <- result
+		}(equation, testValues[i], i)
+	}
+
+	for range equations {
+		total += <-results
 	}
 
 	return total
