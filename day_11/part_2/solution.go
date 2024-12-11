@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var stones []int
+// Solved with the help of Claude
 
 func main() {
 	total := solution()
@@ -16,59 +16,74 @@ func main() {
 }
 
 func solution() int {
-	loadData()
+	inputData := loadData("input.txt")
 
-	blinks := 25
+	total := calculateStones(75, inputData)
 
-	for i := 0; i < blinks; i++ {
-		stones = blink()
-	}
-
-	return len(stones)
+	return total
 }
 
-func blink() []int {
-	output := make([]int, 0)
-
-	for i := 0; i < len(stones); i++ {
-
-		if stones[i] == 0 {
-			stones[i] = 1
-			output = append(output, stones[i])
-		} else if hasEvenDigits(stones[i]) {
-			current := strconv.Itoa(stones[i])
-			half := len(current) / 2
-			firstPart, _ := strconv.Atoi(current[:half])
-			lastPart, _ := strconv.Atoi(current[half:])
-			output = append(output, firstPart)
-			output = append(output, lastPart)
-
-		} else {
-
-			output = append(output, stones[i]*2024)
-		}
+func calculateStones(blinks int, initialStones []int) int {
+	// track stone types
+	stoneCounts := make(map[int]int)
+	for _, stone := range initialStones {
+		stoneCounts[stone]++
 	}
-	return output
+
+	// Process each i
+	for i := 0; i < blinks; i++ {
+		newCounts := make(map[int]int)
+
+		// Process each type of stone
+		for stone, count := range stoneCounts {
+			if stone == 0 {
+				newCounts[1] += count
+			} else if hasEvenDigits(stone) {
+				leftNumber, rightNumber := splitNumber(stone)
+				newCounts[leftNumber] += count
+				newCounts[rightNumber] += count
+			} else {
+				newCounts[stone*2024] += count
+			}
+		}
+		stoneCounts = newCounts
+	}
+
+	// Count total stones
+	total := 0
+	for _, count := range stoneCounts {
+		total += count
+	}
+
+	return total
+}
+func countDigits(n int) int {
+	if n == 0 {
+		return 1
+	}
+	return int(math.Log10(float64(n))) + 1
 }
 
 func hasEvenDigits(n int) bool {
-	if n == 0 {
-		return false
-	}
-
-	if n < 0 {
-		n = -n
-	}
-
-	// Use integer log10 to count digits
-	return (int(math.Log10(float64(n)))+1)%2 == 0
+	return countDigits(n)%2 == 0
 }
 
-func loadData() {
-	lines := framework.ReadInput("input.txt")
+func splitNumber(n int) (int, int) {
+	str := fmt.Sprintf("%d", n)
+	half := len(str) / 2
+	left, _ := strconv.Atoi(str[:half])
+	right, _ := strconv.Atoi(str[half:])
+	return left, right
+}
+
+func loadData(filename string) []int {
+	lines := framework.ReadInput(filename)
+	var numbers []int
 
 	for _, digits := range strings.Split(lines[0], " ") {
 		number, _ := strconv.Atoi(digits)
-		stones = append(stones, number)
+		numbers = append(numbers, number)
 	}
+
+	return numbers
 }
