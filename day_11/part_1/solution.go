@@ -64,14 +64,6 @@ func hasEvenDigits(n int) bool {
 	return (int(math.Log10(float64(n)))+1)%2 == 0
 }
 
-func removeLeading(s string) string {
-	s = strings.TrimLeft(s, "0")
-	if s == "" {
-		return "0"
-	}
-	return s
-}
-
 func loadData() {
 	lines := framework.ReadInput("input.txt")
 
