@@ -32,9 +32,6 @@ func solution() int {
 		for x := 0; x < len(world[0]); x++ {
 			if visited[y][x] == false {
 				area := grabArea(world[y][x], x, y)
-
-				fmt.Println(area)
-
 				total += area.area * area.perimeter
 			}
 		}
