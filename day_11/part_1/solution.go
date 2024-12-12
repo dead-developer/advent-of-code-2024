@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Solved with the help of Claude
+// Change to using part 2 solution here, since it's better
 
 func main() {
 	total := solution()
