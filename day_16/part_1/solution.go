@@ -3,7 +3,6 @@ package main
 import (
 	"AoC2024/framework"
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -55,18 +54,19 @@ func solution() int {
 	queue = append(queue, queueItem{reindeer: firstReindeer, goToDirection: 1}) // any
 
 	for len(queue) > 0 {
-		reindeerItem := queue[0]
+		currentItem := queue[0]
 		queue = queue[1:]
 
-		cost := processPath(reindeerItem.reindeer.position, &reindeerItem.reindeer)
+		cost := processPath(currentItem.reindeer.position, &currentItem.reindeer)
+
 		if cost > 0 {
 			found = append(found, cost)
 		}
-
 	}
 	// sort found
-	sort.Ints(found)
+
 	fmt.Println(found)
+
 	return total
 }
 
@@ -76,24 +76,35 @@ func processPath(startPos point, reindeer *reindeerStruct) int {
 	for true {
 
 		availableDirections := getDirections(reindeer.position, reindeer)
-
-		isEnd := theEnd.x == reindeer.position.x && theEnd.y == reindeer.position.y
-		if isEnd {
+		reindeer.visited[reindeer.position] = true
+		if theEnd.x == reindeer.position.x && theEnd.y == reindeer.position.y {
+			fmt.Println("found end")
 			return reindeer.cost
 		}
 		if len(availableDirections) == 0 { // dead end
-			return -1
+			return 0
 		}
 		firstDirection := availableDirections[0]
 		availableDirections = availableDirections[1:]
-		MoveTo(reindeer, firstDirection)
 
 		//spawn more reindeers for other paths
 		for _, followDirection := range availableDirections {
 			// copy reindeer
-			newReindeer := reindeerStruct{reindeer.position, reindeer.cost, reindeer.direction, reindeer.visited}
+			newVisited := make(map[point]bool)
+			for k, v := range reindeer.visited {
+				newVisited[k] = v
+			}
+
+			newReindeer := reindeerStruct{reindeer.position, reindeer.cost, reindeer.direction, newVisited}
+			//for k, v := range reindeer.visited {
+			//	newReindeer.visited[k] = v
+			//}
 			queue = append(queue, queueItem{reindeer: newReindeer, goToDirection: followDirection})
 		}
+		MoveTo(reindeer, firstDirection)
+
+		//visualize(reindeer)
+		//waitForKeyPress()
 	}
 	return 0
 }
@@ -102,11 +113,9 @@ func MoveTo(reindeer *reindeerStruct, newDirection int) {
 
 	// if not facing the right way, turn
 	turnReindeer(newDirection, reindeer)
-
 	// move
 	reindeer.position.x += directions[newDirection].x
 	reindeer.position.y += directions[newDirection].y
-	reindeer.visited[reindeer.position] = true
 	reindeer.cost += 1
 
 }
@@ -179,4 +188,29 @@ func loadData(filename string) {
 		}
 	}
 
+}
+
+func visualize(reindeer *reindeerStruct) {
+
+	for y := 0; y < len(maze); y++ {
+		for x := 0; x < len(maze[y]); x++ {
+			if reindeer.position.x == x && reindeer.position.y == y {
+				fmt.Print("@")
+				continue
+			}
+
+			if isVisited(point{x, y}, reindeer) {
+				fmt.Print("*")
+			} else {
+				fmt.Print(maze[y][x])
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+	fmt.Println("Score:", reindeer.cost)
+}
+
+func waitForKeyPress() {
+	_, _ = fmt.Scanln()
 }
