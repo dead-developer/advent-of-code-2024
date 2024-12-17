@@ -28,9 +28,9 @@ Trying to learn Go with 2024 Advent Of Code
 | 12  | &check; | &check; |
 | 13  | &check; | &check; |
 | 14  | &check; | &check; |
-| 15  |         |         |
+| 15  | &check; | &check; |
 | 16  |         |         |
-| 17  |         |         |
+| 17  | &check; |         |
 | 18  |         |         |
 | 19  |         |         |
 | 20  |         |         |
