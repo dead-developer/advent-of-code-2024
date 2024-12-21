@@ -32,14 +32,7 @@ func getDayAndPart() (day, part string) {
 	return
 }
 
-func RunTest(correctAnswer int, value int, t *testing.T) {
-	day, part := getDayAndPart()
-
-	if value != correctAnswer {
-		t.Fatalf(`Day %s Part %s invalid result. Expect %d got %d`, day, part, correctAnswer, value)
-	}
-}
-func RunTestString(correctAnswer string, value string, t *testing.T) {
+func RunTest(correctAnswer interface{}, value interface{}, t *testing.T) {
 	day, part := getDayAndPart()
 
 	if value != correctAnswer {
