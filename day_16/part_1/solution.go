@@ -3,6 +3,7 @@ package main
 import (
 	"AoC2024/framework"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -47,38 +48,39 @@ func main() {
 func solution() int {
 	loadData("input.txt")
 
-	total := 0
-
 	firstReindeer := reindeerStruct{start, 0, 1, make(map[point]bool)}
 	firstReindeer.visited[start] = true
-	queue = append(queue, queueItem{reindeer: firstReindeer, goToDirection: 1}) // any
+	queue = append(queue, queueItem{reindeer: firstReindeer, goToDirection: -1}) // any direction
 
 	for len(queue) > 0 {
 		currentItem := queue[0]
 		queue = queue[1:]
 
-		cost := processPath(currentItem.reindeer.position, &currentItem.reindeer)
+		cost := processPath(&currentItem.reindeer, currentItem.goToDirection)
 
 		if cost > 0 {
 			found = append(found, cost)
 		}
+		fmt.Println("queue len: ", len(queue))
 	}
 	// sort found
-
-	fmt.Println(found)
+	sort.Ints(found)
+	total := found[0]
 
 	return total
 }
 
-func processPath(startPos point, reindeer *reindeerStruct) int {
+func processPath(reindeer *reindeerStruct, forceDirection int) int {
 	// where can I move?
 
 	for true {
-
 		availableDirections := getDirections(reindeer.position, reindeer)
+		if forceDirection > -1 {
+			availableDirections = []int{forceDirection}
+			forceDirection = -1
+		}
 		reindeer.visited[reindeer.position] = true
 		if theEnd.x == reindeer.position.x && theEnd.y == reindeer.position.y {
-			fmt.Println("found end")
 			return reindeer.cost
 		}
 		if len(availableDirections) == 0 { // dead end
@@ -96,15 +98,10 @@ func processPath(startPos point, reindeer *reindeerStruct) int {
 			}
 
 			newReindeer := reindeerStruct{reindeer.position, reindeer.cost, reindeer.direction, newVisited}
-			//for k, v := range reindeer.visited {
-			//	newReindeer.visited[k] = v
-			//}
 			queue = append(queue, queueItem{reindeer: newReindeer, goToDirection: followDirection})
 		}
 		MoveTo(reindeer, firstDirection)
 
-		//visualize(reindeer)
-		//waitForKeyPress()
 	}
 	return 0
 }
