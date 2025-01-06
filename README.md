@@ -29,7 +29,7 @@ Trying to learn Go with 2024 Advent Of Code
 | 13  | &check; | &check; |
 | 14  | &check; | &check; |
 | 15  | &check; | &check; |
-| 16  |         |         |
+| 16  | &check; |         |
 | 17  | &check; |         |
 | 18  |         |         |
 | 19  |         |         |
