@@ -3,48 +3,26 @@ package main
 import (
 	"AoC2024/framework"
 	"fmt"
+	"math"
 	"strings"
 )
 
+type cell struct {
+	cost      int
+	direction point
+}
+
 var maze [][]string
-var visited map[point]bool
-
-var startPoint, endPoint point
-
-var queue []queueItem
-
-type queueItem struct {
-	cell     point
-	sourceId point
-	cost     int
-}
-
-type point struct {
-	x, y int
-}
-
-type edge struct {
-	from point
-	to   point
-	cost int
-}
-
-type node struct {
-	id       point
-	edges    map[point]*edge
-	sourceId point
-	label    string
-}
-
-var nodes = make(map[point]*node)
+var visited = make(map[point]bool)
+var nodes = make(map[point]cell)
+var parents = make(map[point]point)
 
 var nilPoint = point{-1, -1}
 
-var directions = map[int]point{
-	0: {0, -1}, //N
-	1: {1, 0},  //E
-	2: {0, 1},  //S
-	3: {-1, 0}, //W
+var startPoint, endPoint point
+
+type point struct {
+	x, y int
 }
 
 func main() {
@@ -55,122 +33,93 @@ func main() {
 
 func solution() int {
 	loadData("input.txt")
-	buildGraph()
 
-	return 0
-}
+	nodes[startPoint] = cell{cost: 0, direction: point{1, 0}}
 
-//
-//func turnReindeer(towards int, reindeer *reindeerStruct) {
-//	if towards == reindeer.direction {
-//		return
-//	}
-//	diff := (towards - reindeer.direction + 4) % 4
-//	switch diff {
-//	case 1:
-//		reindeer.direction = (reindeer.direction + 1) % 4
-//		reindeer.cost += 1000
-//		break
-//	case 2:
-//		reindeer.direction = (reindeer.direction + 3) % 4
-//		reindeer.direction = (reindeer.direction + 3) % 4
-//		reindeer.cost += 2000
-//		break
-//	case 3:
-//		reindeer.direction = (reindeer.direction + 3) % 4
-//		reindeer.cost += 1000
-//		break
-//	}
-//
-//}
+	nextNodeId := getNextNode()
+	for nextNodeId != nilPoint {
+		processNode(nextNodeId)
 
-func getNeighbours(location point) []point {
-	var availableDirections []point
-
-	for _, directionVector := range directions {
-		location := point{location.x + directionVector.x, location.y + directionVector.y}
-		if maze[location.y][location.x] != "#" {
-			if visited[location] {
-				continue
-			}
-			availableDirections = append(availableDirections, location)
+		nextNodeId = getNextNode()
+		if nextNodeId == endPoint {
+			break
 		}
 	}
-	return availableDirections
+
+	return nodes[endPoint].cost
 }
 
-func buildGraph() {
-	// create starting node
-	visited = make(map[point]bool)
-	queue = make([]queueItem, 0)
-
-	//nodes[startPoint] = node{id: startPoint, edges: make(map[int]int), sourceId: nilPoint}
-	queue = append(queue, queueItem{cell: startPoint, sourceId: nilPoint})
-
-	for len(queue) > 0 {
-		currentQueueItem := queue[0]
-		queue = queue[1:]
-
-		visited[currentQueueItem.cell] = true
-		// add node
-		newNode := node{id: currentQueueItem.cell, edges: make(map[point]*edge), sourceId: currentQueueItem.sourceId}
-		if currentQueueItem.cell == endPoint {
-			newNode.label = "E"
-		}
-		nodes[currentQueueItem.cell] = &newNode
-
-		neighbours := getNeighbours(currentQueueItem.cell)
-		for _, neighbour := range neighbours {
-			// add edge to source node
-			if currentQueueItem.sourceId != nilPoint {
-				newEdge := edge{from: currentQueueItem.sourceId, to: neighbour, cost: currentQueueItem.cost}
-				nodes[currentQueueItem.cell].edges[neighbour] = &newEdge
-			}
-			queue = append(queue, queueItem{cell: neighbour, sourceId: currentQueueItem.cell, cost: 1})
-
-		}
-		// neighbours are empty, remove parent node
+func getNeighbours(node point) []point {
+	var neighbors []point
+	if node.x-1 >= 0 && maze[node.y][node.x-1] != "#" {
+		neighbors = append(neighbors, point{node.x - 1, node.y})
 	}
-	optimizeGraph()
-	visualize()
-
+	if node.x+1 < len(maze[0]) && maze[node.y][node.x+1] != "#" {
+		neighbors = append(neighbors, point{node.x + 1, node.y})
+	}
+	if node.y-1 >= 0 && maze[node.y-1][node.x] != "#" {
+		neighbors = append(neighbors, point{node.x, node.y - 1})
+	}
+	if node.y+1 < len(maze) && maze[node.y+1][node.x] != "#" {
+		neighbors = append(neighbors, point{node.x, node.y + 1})
+	}
+	return neighbors
 }
 
-func optimizeGraph() {
-	// remove deadEnds
-	for nodeId := range nodes {
-		checkDeadEnd(nodeId)
+func processNode(nodeId point) {
+	visited[nodeId] = true
+	for _, neighbour := range getNeighbours(nodeId) {
+		addNode(neighbour, nodeId)
 	}
 }
 
-func checkDeadEnd(nodeId point) {
-	if nodeId == nilPoint {
-		return
+func addNode(nodeId point, parentNode point) {
+	// if already exists
+	currentDirection := nodes[parentNode].direction
+
+	if parentNode == nilPoint {
+		currentDirection = point{1, 0}
 	}
+	newDirection := point{nodeId.x - parentNode.x, nodeId.y - parentNode.y}
+	newCost := 1
+	if currentDirection != newDirection {
+		newCost = 1001
+	}
+
+	newCost += nodes[parentNode].cost
+
 	if _, ok := nodes[nodeId]; ok {
-		currentNode := nodes[nodeId]
-		if currentNode.label == "E" {
-			return
+		// if old cost + new cost < current cost
+		if newCost < nodes[nodeId].cost {
+			nodes[nodeId] = cell{
+				cost:      newCost,
+				direction: newDirection,
+			}
+			parents[parentNode] = nodeId
 		}
-		if len(currentNode.edges) == 0 {
-			deleteNode(nodeId)
-
-			// if dead end found, check source node
-			checkDeadEnd(currentNode.sourceId)
-			return
+	} else {
+		nodes[nodeId] = cell{
+			cost:      newCost,
+			direction: newDirection,
 		}
+		parents[parentNode] = nodeId
 	}
+
 }
 
-func deleteNode(nodeId point) {
-	if _, ok := nodes[nodeId]; ok {
-		// remove node and source nodes edge
-		currentNode := nodes[nodeId]
-		if currentNode.sourceId != nilPoint {
-			delete(nodes[currentNode.sourceId].edges, nodeId)
+func getNextNode() point {
+	var lowestCost = math.MaxInt
+	var lowestCostNode = nilPoint
+	for nodeId, node := range nodes {
+		if visited[nodeId] {
+			continue
 		}
-		delete(nodes, nodeId)
+		if node.cost < lowestCost {
+			lowestCost = node.cost
+			lowestCostNode = nodeId
+		}
 	}
+	return lowestCostNode
 }
 
 func loadData(filename string) {
@@ -181,7 +130,7 @@ func loadData(filename string) {
 		maze = append(maze, strings.Split(line, ""))
 	}
 
-	// find start S and end
+	// find start and end locations
 	for y, line := range maze {
 		for x, char := range line {
 			if char == "S" {
@@ -197,24 +146,4 @@ func loadData(filename string) {
 		}
 	}
 
-}
-
-func visualize() {
-	for y := 0; y < len(maze); y++ {
-		for x := 0; x < len(maze[y]); x++ {
-			fmt.Print(maze[y][x])
-		}
-		fmt.Println()
-	}
-	fmt.Println()
-
-	// print individiual nores
-	for _, node := range nodes {
-		fmt.Println(node.id, node.edges)
-	}
-
-}
-
-func waitForKeyPress() {
-	_, _ = fmt.Scanln()
 }
